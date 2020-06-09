@@ -1,7 +1,10 @@
 const Discord = require('discord.js');
 const { Client } = require('discord.js');
-const { Richembed, Collection } = require('discord.js');
+const { Richembed } = require('discord.js');
+const { Collection } = require('discord.js');
 const { config } = require('dotenv'); 
+const handler = require('d.js-command-handler');
+const { readdirSync } = require("fs");
 
 
 const client = new Client({
@@ -15,9 +18,9 @@ config({
     path: __dirname + "/.env"
 });
 
-["command"].forEach(handler =>{
-    require('./handler/${handler}')(client);
-});
+// ["command"].forEach(handler => {
+   // require(`./handler/${handler}`)(client);
+// });
 
 // Custom Status on Bot info card
 client.on("ready", () => {
@@ -43,35 +46,19 @@ client.on('message', async message => {
     if (message.author.bot) return;  // the "!" in these statements are equal to if not. if (!) = If not / is not true.
     if (!message.guild); // A guild is also known as a server in the Discord world.
     if (!message.content.startsWith(prefix)) return;
+    if (!message.member) message.member = await message.guild.fetchMember(message);
 
     const args = message.content.slice(prefix.length).trim().split(/ +/g);
     const cmd = args.shift().toLowerCase();
 
-    if (cmd === "ping") {
-        const msg = await message.channel.send(`🏓 Pinging...`);
+    if (cmd.length === 0) return;
 
-        msg.edit(`🏓 Pong!\nLatency is ${Math.floor(msg.createdAt - message.createdAt)}ms\nAPI Latency ${Math.round(client.ping)}ms`);
-    }
+    let command = client.commands.get(cmd);
+    if (!command) command = client.commands.get(client.aliases.get(cmd));
 
-    if (cmd === "say") {
-        if (message.deletable) message.delete();
+    if (command)
+        command.run(client, message, args);
 
-        if (args.length < 1)
-            return message.reply("Are you still there?").then (m => m.delete(6000));
-        
-        const roleColor = message.guild.me.displayHexColor;
-
-        if (args[0].toLowerCase() === "embed") {
-            const embed = new Discord.MessageEmbed()
-                .setColor(roleColor)
-                .setDescription(args.slice(1).join(" "))
-                .setTimestamp()
-                .setImage('') //<-- A picture will appear under the message
-                .setFooter('Thank you for supporting A-Bday-Bot!'); 
-            
-            message.channel.send(embed);
-        }
-    }
 });
 
 process.on('unhandledRejection', (reason, p) => {
