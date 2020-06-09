@@ -1,9 +1,9 @@
-const Discord = require('discord.js');
+const { Client, Richembed } = require('discord.js');
 const { config } = require('dotenv'); 
-const client = new Discord.Client();
 
-client.once('ready', () => {
-    console.log('Ready!');
+
+const client = new Client({
+    disbleEveryone: true
 });
 
 config({
@@ -11,8 +11,8 @@ config({
 });
 
 // Custom Status on Bot info card
-client.on('ready', () => {
-    console.log(' I am now online, my name is ${client.user.uersname}');
+client.on("ready", () => {
+    console.log('Hi, ${client.user.username} is now Online');
 
     client.user.setPresence({
         status: "online",
@@ -28,15 +28,6 @@ client.on('message', async message => {
     console.log(`${message.author.username} said: ${message.content}`);
 });
 
-
-client.on('message', message => {
-    if (message.content === '!bb Ping'){
-        message.channel.send('Pong');
-    } else if (message.content === '!bb Hi') {
-        message.channel.send('Hello!');
-    }
-});
-
 client.on('message', async message => {
     const prefix = '!bb';
 
@@ -44,6 +35,31 @@ client.on('message', async message => {
     if (!message.guild); // A guild is also known as a server in the Discord world.
     if (!message.content.startsWith(prefix)) return;
 
-})
+    const args = message.content.slice(prefix.length).trim().split(/ +/g);
+    const cmd = args.shift().toLowerCase();
+
+    if (cmd === "ping") {
+        const msg = await message.channel.send(`🏓 Pinging...`);
+
+        msg.edit(`🏓 Pong!\nLatency is ${Math.floor(msg.createdAt - message.createdAt)}ms\nAPI Latency ${Math.round(client.ping)}ms`);
+    }
+
+    if (cmd === "say") {
+        if (message.deletable) message.delete();
+
+        if (args.length < 1)
+            return message.reply("Are you still there?").then (m => m.delete(6000));
+        
+        const roleColor = message.guild.me.displayHexColor;
+
+        if (args[0].toLowerCase() === "embed") {
+            const embed = new Richembed()
+                .setColor(roleColor)
+                .setDescription(args.slice(1).join(" "));
+            
+            message.channel.send(embed);
+        }
+    }
+});
 
 client.login(process.env.TOKEN);
