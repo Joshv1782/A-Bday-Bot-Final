@@ -1,6 +1,6 @@
 const Discord = require('discord.js');
 const { Client } = require('discord.js');
-const { Richembed } = require('discord.js');
+const { Richembed, Collection } = require('discord.js');
 const { config } = require('dotenv'); 
 
 
@@ -8,8 +8,15 @@ const client = new Client({
     disbleEveryone: true
 });
 
+client.commands = new Collection();
+client.aliases = new Collection();
+
 config({
     path: __dirname + "/.env"
+});
+
+["command"].forEach(handler =>{
+    require('./handler/${handler}')(client);
 });
 
 // Custom Status on Bot info card
@@ -57,7 +64,10 @@ client.on('message', async message => {
         if (args[0].toLowerCase() === "embed") {
             const embed = new Discord.MessageEmbed()
                 .setColor(roleColor)
-                .setDescription(args.slice(1).join(" "));
+                .setDescription(args.slice(1).join(" "))
+                .setTimestamp()
+                .setImage('') //<-- A picture will appear under the message
+                .setFooter('Thank you for supporting A-Bday-Bot!'); 
             
             message.channel.send(embed);
         }
