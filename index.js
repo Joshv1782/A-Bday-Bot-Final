@@ -1,4 +1,6 @@
-const { Client, Richembed } = require('discord.js');
+const Discord = require('discord.js');
+const { Client } = require('discord.js');
+const { Richembed } = require('discord.js');
 const { config } = require('dotenv'); 
 
 
@@ -53,7 +55,7 @@ client.on('message', async message => {
         const roleColor = message.guild.me.displayHexColor;
 
         if (args[0].toLowerCase() === "embed") {
-            const embed = new Richembed()
+            const embed = new Discord.MessageEmbed()
                 .setColor(roleColor)
                 .setDescription(args.slice(1).join(" "));
             
@@ -61,5 +63,9 @@ client.on('message', async message => {
         }
     }
 });
+
+process.on('unhandledRejection', (reason, p) => {
+    console.log('Unhandled Rejection at:', p, 'reason:', reason);
+  });
 
 client.login(process.env.TOKEN);
