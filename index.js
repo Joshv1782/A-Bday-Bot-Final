@@ -44,26 +44,26 @@ process.on('unhandledRejection', (reason, p) => {
             message.channel.send("That is not a valid birthday! Example: !bb birthday 7/12/88");
             return;
         }
-
+        
         for (var i = 0; i < anathema.length; i++){
             if (anathema[i].id === guildie.id){
                 found = true;
                 break;
             }
         }
+
         if (!found){
             anathema.push(guildie);
             message.channel.send("Birthday for " + message.member.displayName
             + " has been added successfully!");
         }
+
         else if (found){
             message.channel.send("There is already a birthday on file for "
             + message.member.displayName + ".\n"
             +"Please delete the old entry using the 'remove' command.");
         }
     }
-
-    
 
     else if (message.content === "!bb remove"){
         guildie.name = message.member.displayName;
@@ -77,14 +77,17 @@ process.on('unhandledRejection', (reason, p) => {
                 break;
             }
         }
+
         if (!found){
             message.channel.send("There is no birthday on file for "
             + message.member.displayName);
         }
     }
+
     else if (message.content === "!bb hi"){
         message.reply("Hello!! 👋😃");
     }
+    
     fs.writeFile("./anathema.json", JSON.stringify(anathema), (err) =>{
         if (err) console.log("Failed to write JSON file.");
         return;
