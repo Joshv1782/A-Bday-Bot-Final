@@ -1,68 +1,92 @@
-const Discord = require('discord.js');
-const { Client } = require('discord.js');
-const { Richembed } = require('discord.js');
-const { Collection } = require('discord.js');
-const { config } = require('dotenv'); 
-const handler = require('d.js-command-handler');
-const { readdirSync } = require("fs");
+const fs = require('fs');
+const discord = require('discord.js');
+const ABdayBot = new discord.Client();
+const guildie = {
+    "name":"",
+    "id":"",
+    "birthday":""
+};
+var date = new Date();
+var anathema = JSON.parse(fs.readFileSync("./anathema.json", (err) =>{
+    if (err) console.log("Failed to read file", err);
+    return;
+}));
 
+function celebrate(bdayPerson){
+    // Send message in channel with birthday wish and name mention.
+    // Currently searching for a JS library that can handle timed functions.
+}
 
-const client = new Client({
-    disbleEveryone: true
-});
-
-client.commands = new Collection();
-client.aliases = new Collection();
-
-config({
-    path: __dirname + "/.env"
-});
-
-// ["command"].forEach(handler => {
-   // require(`./handler/${handler}`)(client);
-// });
-
-// Custom Status on Bot info card
-client.on("ready", () => {
-    console.log('Hi, ${client.user.username} is now Online');
-
-    client.user.setPresence({
-        status: "online",
-        game: {
-            name: "Wishing everyone a Happy Bday!",
-            type: "WATCHING"
-        }
-    });
-});
-
-// User message name that sends a message to the bot
-client.on('message', async message => {
-    console.log(`${message.author.username} said: ${message.content}`);
-});
-
-client.on('message', async message => {
-    const prefix = '!bb';
-
-    if (message.author.bot) return;  // the "!" in these statements are equal to if not. if (!) = If not / is not true.
-    if (!message.guild); // A guild is also known as a server in the Discord world.
-    if (!message.content.startsWith(prefix)) return;
-    if (!message.member) message.member = await message.guild.fetchMember(message);
-
-    const args = message.content.slice(prefix.length).trim().split(/ +/g);
-    const cmd = args.shift().toLowerCase();
-
-    if (cmd.length === 0) return;
-
-    let command = client.commands.get(cmd);
-    if (!command) command = client.commands.get(client.aliases.get(cmd));
-
-    if (command)
-        command.run(client, message, args);
-
+ABdayBot.once('ready', () => {
+    console.log("Let's party!");
 });
 
 process.on('unhandledRejection', (reason, p) => {
     console.log('Unhandled Rejection at:', p, 'reason:', reason);
   });
 
-client.login(process.env.TOKEN);
+  ABdayBot.on('message', message => {
+    var found = false;
+    if (message.author.bot || message.channel.type === "dm") return;
+    else if (message.content.startsWith("!bbbirthday")){
+        const bday = message.content.slice(11).trim();
+        guildie.name = message.member.displayName;
+        guildie.id = message.author.id;
+        guildie.birthday = bday;
+        bdayPattern = /\d{1,2}\/\d{1,2}\/\d{0,4}/;
+        if (!bdayPattern.exec(guildie.birthday)){
+            message.channel.send("That is not a valid birthday");
+            return;
+        }
+
+        for (var i = 0; i < anathema.length; i++){
+            if (anathema[i].id === guildie.id){
+                found = true;
+                break;
+            }
+        }
+        if (!found){
+            anathema.push(guildie);
+            message.channel.send("Birthday for " + message.member.displayName
+            + " has been added successfully!");
+        }
+        else if (found){
+            message.channel.send("There is already a birthday on file for "
+            + message.member.displayName + ".\n"
+            +"Please delete the old entry using the 'remove' command.");
+        }
+    }
+
+    
+
+    else if (message.content === "!bbremove"){
+        guildie.name = message.member.displayName;
+        guildie.id = message.author.id;
+        for (var j = 0; j < anathema.length; j++){
+            if (guildie.id === anathema[j].id){
+                anathema.splice(j, 1);
+                found = true;
+                message.channel.send("Birthday for " + message.member.displayName
+                + " has been removed.");
+                break;
+            }
+        }
+        if (!found){
+            message.channel.send("There is no birthday on file for "
+            + message.member.displayName);
+        }
+    }
+    else if (message.content === "!bbhello"){
+        message.reply("Hello!");
+    }
+    fs.writeFile("./anathema.json", JSON.stringify(anathema), (err) =>{
+        if (err) console.log("Failed to write JSON file.");
+        return;
+    });
+});
+
+ABdayBot.on('error', err =>{
+    console.warn(err);
+});
+
+ABdayBot.login(process.env.TOKEN);
