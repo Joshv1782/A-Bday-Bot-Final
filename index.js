@@ -1,6 +1,7 @@
 const fs = require('fs');
-const discord = require('discord.js');
-const ABdayBot = new discord.Client();
+const Discord = require('discord.js');
+const { config } = require('dotenv'); 
+const ABdayBot = new Discord.Client();
 const guildie = {
     "name":"",
     "id":"",
@@ -11,6 +12,10 @@ var anathema = JSON.parse(fs.readFileSync("./anathema.json", (err) =>{
     if (err) console.log("Failed to read file", err);
     return;
 }));
+
+config({
+    path: __dirname + "/.env"
+});
 
 function celebrate(bdayPerson){
     // Send message in channel with birthday wish and name mention.
@@ -28,14 +33,15 @@ process.on('unhandledRejection', (reason, p) => {
   ABdayBot.on('message', message => {
     var found = false;
     if (message.author.bot || message.channel.type === "dm") return;
-    else if (message.content.startsWith("!bbbirthday")){
+    else if (message.content.startsWith("!bb birthday")){
         const bday = message.content.slice(11).trim();
         guildie.name = message.member.displayName;
         guildie.id = message.author.id;
         guildie.birthday = bday;
         bdayPattern = /\d{1,2}\/\d{1,2}\/\d{0,4}/;
+        
         if (!bdayPattern.exec(guildie.birthday)){
-            message.channel.send("That is not a valid birthday");
+            message.channel.send("That is not a valid birthday! Example: !bb birthday 7/12/88");
             return;
         }
 
@@ -59,7 +65,7 @@ process.on('unhandledRejection', (reason, p) => {
 
     
 
-    else if (message.content === "!bbremove"){
+    else if (message.content === "!bb remove"){
         guildie.name = message.member.displayName;
         guildie.id = message.author.id;
         for (var j = 0; j < anathema.length; j++){
@@ -76,8 +82,8 @@ process.on('unhandledRejection', (reason, p) => {
             + message.member.displayName);
         }
     }
-    else if (message.content === "!bbhello"){
-        message.reply("Hello!");
+    else if (message.content === "!bb hi"){
+        message.reply("Hello!! 👋😃");
     }
     fs.writeFile("./anathema.json", JSON.stringify(anathema), (err) =>{
         if (err) console.log("Failed to write JSON file.");
